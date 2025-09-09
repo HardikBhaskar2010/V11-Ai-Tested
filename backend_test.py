@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend API Test Suite for Atal Idea Generator
-Tests all API endpoints for functionality, error handling, and data integrity
+Backend API Test Suite for Atal Idea Generator
+Tests actual backend endpoints: health, components, AI generation, and LLM connection
 """
 
 import requests
 import json
-import uuid
 from datetime import datetime
 from typing import Dict, Any, List
 import sys
@@ -20,7 +19,6 @@ class BackendTester:
     def __init__(self):
         self.session = requests.Session()
         self.test_results = []
-        self.created_idea_ids = []  # Track created ideas for cleanup
         
     def log_test(self, test_name: str, success: bool, message: str, details: Dict = None):
         """Log test results"""
@@ -44,11 +42,15 @@ class BackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                if "status" in data and data["status"] == "healthy":
-                    self.log_test("Health Check", True, "Health endpoint responding correctly", 
+                required_fields = ["status", "timestamp", "emergent_llm_available", "version"]
+                
+                if all(field in data for field in required_fields) and data["status"] == "healthy":
+                    emergent_status = data.get("emergent_llm_available", False)
+                    self.log_test("Health Check", True, 
+                                f"Health endpoint working correctly. Emergent LLM: {'Available' if emergent_status else 'Not Available'}", 
                                 {"status_code": response.status_code, "response": data})
                 else:
-                    self.log_test("Health Check", False, "Invalid health response format", 
+                    self.log_test("Health Check", False, "Missing required fields in health response", 
                                 {"status_code": response.status_code, "response": data})
             else:
                 self.log_test("Health Check", False, f"Unexpected status code: {response.status_code}",
@@ -66,23 +68,30 @@ class BackendTester:
             
             if response.status_code == 200:
                 components = response.json()
-                if isinstance(components, list):
-                    self.log_test("Get All Components", True, f"Retrieved {len(components)} components",
-                                {"count": len(components), "sample": components[:2] if components else []})
+                if isinstance(components, list) and len(components) > 0:
+                    # Verify component structure
+                    first_component = components[0]
+                    required_fields = ["id", "name", "category", "description"]
                     
-                    # Test GET component by ID if components exist
-                    if components:
-                        component_id = components[0].get("id")
+                    if all(field in first_component for field in required_fields):
+                        self.log_test("Get All Components", True, f"Retrieved {len(components)} components with correct structure",
+                                    {"count": len(components), "sample": components[:2]})
+                        
+                        # Test GET component by ID if components exist
+                        component_id = first_component.get("id")
                         if component_id:
                             self.test_get_component_by_id(component_id)
                         
                         # Test GET components by category
-                        category = components[0].get("category")
+                        category = first_component.get("category")
                         if category:
                             self.test_get_components_by_category(category)
+                    else:
+                        self.log_test("Get All Components", False, "Components missing required fields",
+                                    {"required_fields": required_fields, "sample": first_component})
                 else:
-                    self.log_test("Get All Components", False, "Response is not a list",
-                                {"response_type": type(components).__name__})
+                    self.log_test("Get All Components", False, "Response is not a list or is empty",
+                                {"response_type": type(components).__name__, "length": len(components) if isinstance(components, list) else "N/A"})
             else:
                 self.log_test("Get All Components", False, f"Unexpected status code: {response.status_code}",
                             {"status_code": response.status_code, "response": response.text})
@@ -137,6 +146,30 @@ class BackendTester:
                 
         except requests.exceptions.RequestException as e:
             self.log_test("Get Components by Category", False, f"Connection error: {str(e)}")
+    
+    def test_llm_connection(self):
+        """Test /api/test-llm endpoint"""
+        try:
+            response = self.session.get(f"{API_BASE}/test-llm", timeout=15)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "success" in data:
+                    if data["success"]:
+                        self.log_test("LLM Connection Test", True, "LLM connection successful",
+                                    {"model": data.get("model"), "response": data.get("response")})
+                    else:
+                        self.log_test("LLM Connection Test", False, f"LLM connection failed: {data.get('message')}",
+                                    {"error": data.get("error")})
+                else:
+                    self.log_test("LLM Connection Test", False, "Invalid response format",
+                                {"response": data})
+            else:
+                self.log_test("LLM Connection Test", False, f"Unexpected status code: {response.status_code}",
+                            {"status_code": response.status_code, "response": response.text})
+                
+        except requests.exceptions.RequestException as e:
+            self.log_test("LLM Connection Test", False, f"Connection error: {str(e)}")
     
     def test_user_preferences(self):
         """Test user preferences GET and POST endpoints"""
