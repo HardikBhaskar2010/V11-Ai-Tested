@@ -103,6 +103,7 @@ const AIIdeaGeneration = () => {
         return;
       }
 
+      console.log('🚀 Starting idea generation with components:', selectedComponents);
       toast.loading('Generating ideas with OpenRouter AI...', { id: 'generate-ideas' });
       
       // Use OpenRouter service to generate ideas
@@ -112,23 +113,40 @@ const AIIdeaGeneration = () => {
         selectedModel
       );
       
-      setGeneratedIdeas(ideas);
-      toast.success(`Generated ${ideas.length} ideas using ${selectedModel}!`, { id: 'generate-ideas' });
+      console.log('✅ Received ideas from OpenRouter service:', ideas);
+      console.log(`📊 Number of ideas received: ${ideas.length}`);
+      
+      if (ideas && ideas.length > 0) {
+        setGeneratedIdeas(ideas);
+        console.log('✅ Ideas set in component state');
+        toast.success(`Generated ${ideas.length} ideas using ${selectedModel}!`, { id: 'generate-ideas' });
+      } else {
+        console.warn('⚠️ No ideas received from service');
+        setError('No ideas were generated. Please try again.');
+        toast.error('No ideas generated. Please try again.', { id: 'generate-ideas' });
+      }
       
       // Update stats in localStorage
       try {
         const stats = JSON.parse(localStorage.getItem('userStats') || '{}');
         stats.ideas_generated = (stats.ideas_generated || 0) + ideas.length;
         localStorage.setItem('userStats', JSON.stringify(stats));
+        console.log('📈 Updated user stats');
       } catch (e) {
         console.warn('Could not update stats:', e);
       }
     } catch (error) {
-      console.error('Generate ideas error:', error);
+      console.error('❌ Generate ideas error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        cause: error.cause
+      });
       setError(error.message || 'Failed to generate ideas. Please try again.');
       toast.error(error.message || 'Failed to generate ideas', { id: 'generate-ideas' });
     } finally {
       setIsLoading(false);
+      console.log('🏁 Idea generation process completed');
     }
   };
 
