@@ -104,10 +104,10 @@ const AIIdeaGeneration = () => {
       }
 
       console.log('🚀 Starting idea generation with components:', selectedComponents);
-      toast.loading('Generating ideas with OpenRouter AI...', { id: 'generate-ideas' });
+      toast.loading('Generating ideas with Emergent LLM...', { id: 'generate-ideas' });
       
-      // Use OpenRouter service to generate ideas
-      const ideas = await openRouterService.generateIdeasWithModel(
+      // Use LLM service to generate ideas
+      const ideas = await llmService.generateIdeasWithModel(
         selectedComponents,
         generationPreferences,
         selectedModel
