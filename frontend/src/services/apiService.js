@@ -27,10 +27,10 @@ export const apiService = {
   toggleFavorite: (id, isFavorite) => firebaseService.toggleIdeaFavorite(id, isFavorite),
   searchIdeas: firebaseService.searchIdeas,
 
-  // AI Idea Generation (using OpenAI)
-  generateIdeas: (request) => openaiService.generateProjectIdeas(request),
-  enhanceIdea: openaiService.enhanceProjectIdea,
-  getProjectSuggestions: openaiService.getProjectSuggestions,
+  // AI Idea Generation (using OpenRouter)
+  generateIdeas: (request) => openRouterService.generateIdeas(request.components, request.preferences),
+  enhanceIdea: (idea) => Promise.resolve(idea), // Placeholder for future enhancement
+  getProjectSuggestions: (components) => openRouterService.generateIdeas(components),
 
   // User Stats (using Firebase)
   getUserStats: firebaseService.fetchStats,
