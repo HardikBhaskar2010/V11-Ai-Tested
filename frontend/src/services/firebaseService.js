@@ -18,6 +18,72 @@ import {
 // =============================
 
 // Sample components data
+const SAMPLE_COMPONENTS = [
+  {
+    name: "Arduino Uno",
+    category: "Microcontrollers",
+    description: "Popular microcontroller board based on ATmega328P",
+    price: 450.0,
+    availability: "Available",
+    stock: 15
+  },
+  {
+    name: "Servo Motor SG90",
+    category: "Motors",
+    description: "Micro servo motor for robotics projects",
+    price: 150.0,
+    availability: "Available",
+    stock: 8
+  },
+  {
+    name: "Ultrasonic Sensor HC-SR04",
+    category: "Sensors", 
+    description: "Distance measuring sensor using ultrasonic waves",
+    price: 120.0,
+    availability: "Available",
+    stock: 12
+  },
+  {
+    name: "LED Strip WS2812B",
+    category: "Display",
+    description: "Addressable RGB LED strip", 
+    price: 300.0,
+    availability: "Available",
+    stock: 6
+  },
+  {
+    name: "ESP32 DevKit",
+    category: "Microcontrollers",
+    description: "WiFi and Bluetooth enabled microcontroller",
+    price: 550.0,
+    availability: "Available",
+    stock: 10
+  },
+  {
+    name: "PIR Motion Sensor",
+    category: "Sensors",
+    description: "Passive infrared sensor for motion detection",
+    price: 80.0,
+    availability: "Available",
+    stock: 15
+  },
+  {
+    name: "LCD Display 16x2",
+    category: "Display",
+    description: "Character display for showing text and numbers",
+    price: 200.0,
+    availability: "Available",
+    stock: 8
+  },
+  {
+    name: "Breadboard 830 Points",
+    category: "Prototyping",
+    description: "Half-size breadboard for circuit prototyping",
+    price: 100.0,
+    availability: "Available",
+    stock: 20
+  }
+];
 
 // Initialize sample components if collection is empty
 export async function initializeSampleComponents() {
