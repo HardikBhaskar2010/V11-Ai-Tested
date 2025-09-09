@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Heart, Share2, Eye, Bookmark, Lightbulb, Zap, AlertCircle, Settings, Cpu } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { saveIdea as saveIdeaToFirebase } from '../services/firebaseService';
-import { openRouterService } from '../services/openRouterService';
+import { llmService } from '../services/llmService';
 
 const AIIdeaGeneration = () => {
   const navigate = useNavigate();
