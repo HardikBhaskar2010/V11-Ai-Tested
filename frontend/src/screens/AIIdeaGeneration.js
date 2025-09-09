@@ -150,14 +150,14 @@ const AIIdeaGeneration = () => {
     }
   };
 
-  // Test OpenRouter connection
+  // Test LLM connection
   const testConnection = async () => {
     try {
-      toast.loading('Testing OpenRouter connection...', { id: 'test-connection' });
-      const result = await openRouterService.testConnection();
+      toast.loading('Testing Emergent LLM connection...', { id: 'test-connection' });
+      const result = await llmService.testConnection();
       
       if (result.success) {
-        toast.success('OpenRouter connection successful!', { id: 'test-connection' });
+        toast.success('Emergent LLM connection successful!', { id: 'test-connection' });
       } else {
         toast.error(`Connection failed: ${result.message}`, { id: 'test-connection' });
       }
