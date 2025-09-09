@@ -171,273 +171,110 @@ class BackendTester:
         except requests.exceptions.RequestException as e:
             self.log_test("LLM Connection Test", False, f"Connection error: {str(e)}")
     
-    def test_user_preferences(self):
-        """Test user preferences GET and POST endpoints"""
-        
-        # Test GET preferences
-        try:
-            response = self.session.get(f"{API_BASE}/preferences", timeout=10)
-            
-            if response.status_code == 200:
-                preferences = response.json()
-                if "id" in preferences and "skill_level" in preferences:
-                    self.log_test("Get User Preferences", True, "Preferences retrieved successfully",
-                                {"skill_level": preferences.get("skill_level")})
-                    
-                    # Test POST preferences (update)
-                    self.test_save_user_preferences(preferences)
-                else:
-                    self.log_test("Get User Preferences", False, "Invalid preferences format",
-                                {"response": preferences})
-            else:
-                self.log_test("Get User Preferences", False, f"Unexpected status code: {response.status_code}")
-                
-        except requests.exceptions.RequestException as e:
-            self.log_test("Get User Preferences", False, f"Connection error: {str(e)}")
-    
-    def test_save_user_preferences(self, current_prefs: Dict):
-        """Test POST user preferences"""
-        try:
-            # Update some preferences
-            updated_prefs = current_prefs.copy()
-            updated_prefs["skill_level"] = "Intermediate"
-            updated_prefs["selected_themes"] = ["Agriculture", "IoT"]
-            updated_prefs["interests"] = ["Automation", "Sensors"]
-            updated_prefs["dark_mode_enabled"] = True
-            
-            response = self.session.post(f"{API_BASE}/preferences", 
-                                       json=updated_prefs, timeout=10)
-            
-            if response.status_code == 200:
-                saved_prefs = response.json()
-                if (saved_prefs.get("skill_level") == "Intermediate" and 
-                    saved_prefs.get("dark_mode_enabled") == True):
-                    self.log_test("Save User Preferences", True, "Preferences saved successfully",
-                                {"skill_level": saved_prefs.get("skill_level"),
-                                 "themes": saved_prefs.get("selected_themes")})
-                else:
-                    self.log_test("Save User Preferences", False, "Preferences not saved correctly",
-                                {"expected": updated_prefs, "received": saved_prefs})
-            else:
-                self.log_test("Save User Preferences", False, f"Unexpected status code: {response.status_code}")
-                
-        except requests.exceptions.RequestException as e:
-            self.log_test("Save User Preferences", False, f"Connection error: {str(e)}")
-    
-    def test_ideas_crud_operations(self):
-        """Test CRUD operations for ideas"""
-        
-        # Test GET all ideas first
-        try:
-            response = self.session.get(f"{API_BASE}/ideas", timeout=10)
-            
-            if response.status_code == 200:
-                ideas = response.json()
-                if isinstance(ideas, list):
-                    self.log_test("Get All Ideas", True, f"Retrieved {len(ideas)} saved ideas",
-                                {"count": len(ideas)})
-                    
-                    # Test CREATE idea
-                    self.test_create_idea()
-                    
-                    # Test search ideas
-                    self.test_search_ideas()
-                    
-                else:
-                    self.log_test("Get All Ideas", False, "Response is not a list")
-            else:
-                self.log_test("Get All Ideas", False, f"Unexpected status code: {response.status_code}")
-                
-        except requests.exceptions.RequestException as e:
-            self.log_test("Get All Ideas", False, f"Connection error: {str(e)}")
-    
-    def test_create_idea(self):
-        """Test POST new idea"""
-        try:
-            new_idea = {
-                "id": str(uuid.uuid4()),
-                "title": "Smart Home Security System",
-                "description": "An IoT-based security system with motion detection and smartphone alerts",
-                "problem_statement": "Home security is a major concern for homeowners when they are away",
-                "working_principle": "Motion sensors detect movement and send alerts via WiFi to smartphone app",
-                "difficulty": "Intermediate",
-                "estimated_cost": "₹1,500",
-                "components": ["ESP32", "PIR Motion Sensor", "Camera Module", "Buzzer"],
-                "innovation_elements": ["Real-time alerts", "Cloud storage", "Mobile app integration"],
-                "scalability_options": ["Multiple room monitoring", "AI-powered threat detection"],
-                "availability": "Available",
-                "is_favorite": False,
-                "tags": ["Security", "IoT", "Home Automation"],
-                "notes": "Test idea for backend validation"
-            }
-            
-            response = self.session.post(f"{API_BASE}/ideas", json=new_idea, timeout=10)
-            
-            if response.status_code == 200:
-                created_idea = response.json()
-                idea_id = created_idea.get("id")
-                self.created_idea_ids.append(idea_id)  # Track for cleanup
-                
-                if created_idea.get("title") == new_idea["title"]:
-                    self.log_test("Create New Idea", True, "Idea created successfully",
-                                {"idea_id": idea_id, "title": created_idea.get("title")})
-                    
-                    # Test UPDATE idea
-                    self.test_update_idea(idea_id, created_idea)
-                    
-                    # Test toggle favorite
-                    self.test_toggle_favorite(idea_id)
-                    
-                else:
-                    self.log_test("Create New Idea", False, "Created idea doesn't match input")
-            else:
-                self.log_test("Create New Idea", False, f"Unexpected status code: {response.status_code}")
-                
-        except requests.exceptions.RequestException as e:
-            self.log_test("Create New Idea", False, f"Connection error: {str(e)}")
-    
-    def test_update_idea(self, idea_id: str, original_idea: Dict):
-        """Test PUT update idea"""
-        try:
-            updated_idea = original_idea.copy()
-            updated_idea["title"] = "Enhanced Smart Home Security System"
-            updated_idea["notes"] = "Updated with enhanced features"
-            updated_idea["is_favorite"] = True
-            
-            response = self.session.put(f"{API_BASE}/ideas/{idea_id}", 
-                                      json=updated_idea, timeout=10)
-            
-            if response.status_code == 200:
-                result = response.json()
-                if (result.get("title") == "Enhanced Smart Home Security System" and 
-                    result.get("is_favorite") == True):
-                    self.log_test("Update Idea", True, "Idea updated successfully",
-                                {"idea_id": idea_id, "new_title": result.get("title")})
-                else:
-                    self.log_test("Update Idea", False, "Idea not updated correctly")
-            else:
-                self.log_test("Update Idea", False, f"Unexpected status code: {response.status_code}")
-                
-        except requests.exceptions.RequestException as e:
-            self.log_test("Update Idea", False, f"Connection error: {str(e)}")
-    
-    def test_toggle_favorite(self, idea_id: str):
-        """Test PATCH toggle favorite"""
-        try:
-            response = self.session.patch(f"{API_BASE}/ideas/{idea_id}/favorite?is_favorite=true", 
-                                        timeout=10)
-            
-            if response.status_code == 200:
-                result = response.json()
-                if "message" in result:
-                    self.log_test("Toggle Favorite", True, "Favorite status updated successfully",
-                                {"idea_id": idea_id, "message": result.get("message")})
-                else:
-                    self.log_test("Toggle Favorite", False, "Invalid response format")
-            else:
-                self.log_test("Toggle Favorite", False, f"Unexpected status code: {response.status_code}")
-                
-        except requests.exceptions.RequestException as e:
-            self.log_test("Toggle Favorite", False, f"Connection error: {str(e)}")
-    
-    def test_search_ideas(self):
-        """Test GET search ideas"""
-        try:
-            search_query = "Smart"
-            response = self.session.get(f"{API_BASE}/ideas/search?query={search_query}", 
-                                      timeout=10)
-            
-            if response.status_code == 200:
-                search_results = response.json()
-                if isinstance(search_results, list):
-                    self.log_test("Search Ideas", True, f"Search returned {len(search_results)} results",
-                                {"query": search_query, "results_count": len(search_results)})
-                else:
-                    self.log_test("Search Ideas", False, "Search results not in list format")
-            else:
-                self.log_test("Search Ideas", False, f"Unexpected status code: {response.status_code}")
-                
-        except requests.exceptions.RequestException as e:
-            self.log_test("Search Ideas", False, f"Connection error: {str(e)}")
-    
     def test_ai_idea_generation(self):
-        """Test /api/generate-ideas endpoint"""
+        """Test /api/generate-ideas endpoint - the main AI feature"""
         try:
+            # Test with realistic components and preferences
             generation_request = {
-                "selected_components": ["Arduino Uno", "Soil Moisture Sensor", "Water Pump"],
-                "theme": "Agriculture",
-                "count": 3
+                "selected_components": [
+                    {"id": "arduino_uno", "name": "Arduino Uno", "category": "Microcontrollers"},
+                    {"id": "led", "name": "LED", "category": "Display"},
+                    {"id": "ultrasonic_sensor", "name": "Ultrasonic Sensor", "category": "Sensors"}
+                ],
+                "preferences": {
+                    "theme": "Smart Home",
+                    "skillLevel": "Beginner",
+                    "count": 3,
+                    "duration": "2-3 hours",
+                    "teamSize": "Individual"
+                },
+                "model_id": "gpt-4o-mini"
             }
             
+            print("🤖 Testing AI idea generation with realistic components...")
             response = self.session.post(f"{API_BASE}/generate-ideas", 
-                                       json=generation_request, timeout=15)
+                                       json=generation_request, timeout=30)
             
             if response.status_code == 200:
                 generated_ideas = response.json()
                 if isinstance(generated_ideas, list) and len(generated_ideas) > 0:
                     first_idea = generated_ideas[0]
-                    if all(key in first_idea for key in ["title", "description", "components"]):
+                    required_fields = ["id", "title", "description", "components", "difficulty", "estimated_cost"]
+                    
+                    if all(field in first_idea for field in required_fields):
                         self.log_test("AI Idea Generation", True, 
                                     f"Generated {len(generated_ideas)} ideas successfully",
                                     {"ideas_count": len(generated_ideas), 
-                                     "sample_title": first_idea.get("title")})
+                                     "sample_title": first_idea.get("title"),
+                                     "sample_difficulty": first_idea.get("difficulty")})
                     else:
+                        missing_fields = [field for field in required_fields if field not in first_idea]
                         self.log_test("AI Idea Generation", False, "Generated ideas missing required fields",
-                                    {"sample_idea": first_idea})
+                                    {"missing_fields": missing_fields, "sample_idea": first_idea})
                 else:
-                    self.log_test("AI Idea Generation", False, "No ideas generated or invalid format")
+                    self.log_test("AI Idea Generation", False, "No ideas generated or invalid format",
+                                {"response_type": type(generated_ideas).__name__, 
+                                 "response_length": len(generated_ideas) if isinstance(generated_ideas, list) else "N/A"})
+            elif response.status_code == 500:
+                error_data = response.json() if response.headers.get('content-type') == 'application/json' else {"detail": response.text}
+                self.log_test("AI Idea Generation", False, f"Server error: {error_data.get('detail', 'Unknown error')}",
+                            {"status_code": response.status_code, "error": error_data})
             else:
-                self.log_test("AI Idea Generation", False, f"Unexpected status code: {response.status_code}")
+                self.log_test("AI Idea Generation", False, f"Unexpected status code: {response.status_code}",
+                            {"status_code": response.status_code, "response": response.text})
                 
         except requests.exceptions.RequestException as e:
             self.log_test("AI Idea Generation", False, f"Connection error: {str(e)}")
     
-    def test_user_stats(self):
-        """Test user statistics endpoint"""
+    def test_ai_generation_edge_cases(self):
+        """Test AI generation with edge cases"""
+        
+        # Test with empty components
         try:
-            response = self.session.get(f"{API_BASE}/stats", timeout=10)
+            empty_request = {
+                "selected_components": [],
+                "preferences": {"theme": "General", "skillLevel": "Beginner", "count": 1}
+            }
             
-            if response.status_code == 200:
-                stats = response.json()
-                if "ideas_generated" in stats and "projects_completed" in stats:
-                    self.log_test("Get User Stats", True, "User statistics retrieved successfully",
-                                {"ideas_generated": stats.get("ideas_generated"),
-                                 "projects_completed": stats.get("projects_completed")})
-                else:
-                    self.log_test("Get User Stats", False, "Invalid stats format")
+            response = self.session.post(f"{API_BASE}/generate-ideas", 
+                                       json=empty_request, timeout=15)
+            
+            if response.status_code in [400, 422]:
+                self.log_test("AI Generation - Empty Components", True, "Proper error handling for empty components")
+            elif response.status_code == 200:
+                self.log_test("AI Generation - Empty Components", True, "Handled empty components gracefully")
             else:
-                self.log_test("Get User Stats", False, f"Unexpected status code: {response.status_code}")
+                self.log_test("AI Generation - Empty Components", False, f"Unexpected response: {response.status_code}")
                 
         except requests.exceptions.RequestException as e:
-            self.log_test("Get User Stats", False, f"Connection error: {str(e)}")
-    
-    def cleanup_test_data(self):
-        """Clean up test data created during testing"""
-        for idea_id in self.created_idea_ids:
-            try:
-                response = self.session.delete(f"{API_BASE}/ideas/{idea_id}", timeout=10)
-                if response.status_code == 200:
-                    self.log_test("Cleanup Test Data", True, f"Deleted test idea {idea_id}")
-                else:
-                    self.log_test("Cleanup Test Data", False, f"Failed to delete test idea {idea_id}")
-            except Exception as e:
-                self.log_test("Cleanup Test Data", False, f"Error deleting idea {idea_id}: {str(e)}")
+            self.log_test("AI Generation - Empty Components", False, f"Connection error: {str(e)}")
+        
+        # Test with invalid request format
+        try:
+            invalid_request = {"invalid_field": "test"}
+            
+            response = self.session.post(f"{API_BASE}/generate-ideas", 
+                                       json=invalid_request, timeout=15)
+            
+            if response.status_code in [400, 422]:
+                self.log_test("AI Generation - Invalid Request", True, "Proper validation for invalid request format")
+            else:
+                self.log_test("AI Generation - Invalid Request", False, f"Should reject invalid request: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            self.log_test("AI Generation - Invalid Request", False, f"Connection error: {str(e)}")
     
     def run_all_tests(self):
         """Run comprehensive backend API tests"""
         print("🚀 Starting Atal Idea Generator Backend API Tests")
         print("=" * 60)
         
-        # Test all endpoints
+        # Test all actual endpoints
         self.test_health_check()
         self.test_components_api()
-        self.test_user_preferences()
-        self.test_ideas_crud_operations()
+        self.test_llm_connection()
         self.test_ai_idea_generation()
-        self.test_user_stats()
-        
-        # Cleanup
-        self.cleanup_test_data()
+        self.test_ai_generation_edge_cases()
         
         # Summary
         print("\n" + "=" * 60)
