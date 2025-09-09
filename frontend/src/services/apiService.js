@@ -1,6 +1,6 @@
-// Import Firebase and OpenAI services
+// Import Firebase and OpenRouter services
 import * as firebaseService from './firebaseService';
-import * as openaiService from './openaiService';
+import { openRouterService } from './openRouterService';
 
 // Create a unified API service that uses Firebase directly
 export const apiService = {
