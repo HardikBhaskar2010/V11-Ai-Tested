@@ -13,7 +13,7 @@ const AIIdeaGeneration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showModelSelection, setShowModelSelection] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('deepseek/deepseek-r1');
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [availableModels, setAvailableModels] = useState([]);
   const [generationPreferences, setGenerationPreferences] = useState({
     theme: 'General',
