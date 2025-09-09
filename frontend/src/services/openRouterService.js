@@ -5,9 +5,16 @@ class OpenRouterService {
   constructor() {
     this.openai = new OpenAI({
       baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: process.env.REACT_APP_OPENROUTER_API_KEY || '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',
+      apiKey: process.env.REACT_APP_OPENROUTER_API_KEY,
       dangerouslyAllowBrowser: true
     });
+    
+    // Validate API key on initialization
+    if (!process.env.REACT_APP_OPENROUTER_API_KEY) {
+      console.error('🔑 REACT_APP_OPENROUTER_API_KEY is not set in environment variables');
+    } else {
+      console.log('🔑 OpenRouter API key loaded successfully');
+    }
   }
 
   // Generate project ideas based on components and preferences
