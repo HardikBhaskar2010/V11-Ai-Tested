@@ -298,29 +298,53 @@ Use your reasoning to ensure each project meets all these criteria.`;
         response_format: { type: "json_object" }
       });
 
+      console.log('🔍 OpenRouter Response:', response);
+      
       const content = response.choices[0].message.content;
-      const parsed = JSON.parse(content);
+      console.log('📝 Raw API Response Content:', content);
+      
+      let parsed;
+      try {
+        parsed = JSON.parse(content);
+        console.log('✅ Parsed JSON Response:', parsed);
+      } catch (parseError) {
+        console.error('❌ JSON Parse Error:', parseError);
+        console.log('📄 Raw content that failed to parse:', content);
+        throw new Error('Failed to parse AI response as JSON');
+      }
+      
       const projects = parsed.projects || [];
+      console.log(`💡 Extracted ${projects.length} projects from response`);
+      
+      if (projects.length === 0) {
+        console.warn('⚠️ No projects found in response. Full parsed object:', parsed);
+      }
 
-      return projects.map((project, index) => ({
-        id: `generated_${Date.now()}_${index}`,
-        title: project.title,
-        description: project.description,
-        problem_statement: project.problem_statement,
-        working_principle: project.working_principle,
-        components: project.components,
-        difficulty: project.difficulty,
-        estimated_cost: project.estimated_cost,
-        innovation_elements: project.innovation_elements,
-        scalability_options: project.scalability_options,
-        learning_outcomes: project.learning_outcomes,
-        tags: project.tags,
-        availability: 'Available',
-        is_favorite: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        generated_by: modelId
-      }));
+      const mappedProjects = projects.map((project, index) => {
+        console.log(`🎯 Mapping project ${index + 1}:`, project.title);
+        return {
+          id: `generated_${Date.now()}_${index}`,
+          title: project.title || `Untitled Project ${index + 1}`,
+          description: project.description || 'No description provided',
+          problem_statement: project.problem_statement || '',
+          working_principle: project.working_principle || '',
+          components: project.components || [],
+          difficulty: project.difficulty || 'Beginner',
+          estimated_cost: project.estimated_cost || '₹500-1000',
+          innovation_elements: project.innovation_elements || [],
+          scalability_options: project.scalability_options || [],
+          learning_outcomes: project.learning_outcomes || [],
+          tags: project.tags || [],
+          availability: 'Available',
+          is_favorite: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          generated_by: modelId
+        };
+      });
+      
+      console.log(`🚀 Returning ${mappedProjects.length} mapped projects to UI`);
+      return mappedProjects;
 
     } catch (error) {
       console.error('OpenRouter Generation Error:', error);
