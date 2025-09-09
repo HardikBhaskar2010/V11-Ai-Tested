@@ -79,7 +79,7 @@ const AIIdeaGeneration = () => {
   useEffect(() => {
     const loadModels = async () => {
       try {
-        const models = await openRouterService.getAvailableModels();
+        const models = await llmService.getAvailableModels();
         setAvailableModels(models);
       } catch (error) {
         console.error('Failed to load models:', error);
