@@ -23,15 +23,41 @@ const AIIdeaGeneration = () => {
     teamSize: 'Individual'
   });
   
-  // Get selected components from localStorage instead of context
-  const [selectedComponents] = useState(() => {
-    try {
-      const saved = localStorage.getItem('selectedComponents');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Get selected components from localStorage with proper reactivity
+  const [selectedComponents, setSelectedComponents] = useState([]);
+
+  // Load selected components on mount and when localStorage changes
+  useEffect(() => {
+    const loadSelectedComponents = () => {
+      try {
+        const saved = localStorage.getItem('selectedComponents');
+        const components = saved ? JSON.parse(saved) : [];
+        setSelectedComponents(components);
+        console.log('📦 Loaded selected components:', components.length);
+      } catch (error) {
+        console.error('Error loading selected components:', error);
+        setSelectedComponents([]);
+      }
+    };
+
+    // Load initially
+    loadSelectedComponents();
+
+    // Listen for localStorage changes
+    const handleStorageChange = () => {
+      loadSelectedComponents();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically in case localStorage changed in same tab
+    const interval = setInterval(loadSelectedComponents, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Load user preferences from localStorage
   useEffect(() => {
