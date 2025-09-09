@@ -430,7 +430,7 @@ const AIIdeaGeneration = () => {
                   Test Connection
                 </button>
                 <div className="text-xs text-gray-400">
-                  Using OpenRouter with model: {availableModels.find(m => m.id === selectedModel)?.name}
+                  Using Emergent LLM with model: {availableModels.find(m => m.id === selectedModel)?.name}
                 </div>
               </div>
             </div>
