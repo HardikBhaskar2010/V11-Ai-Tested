@@ -1,6 +1,6 @@
-// Import Firebase and OpenRouter services
+// Import Firebase and LLM services
 import * as firebaseService from './firebaseService';
-import { openRouterService } from './openRouterService';
+import { llmService } from './llmService';
 
 // Create a unified API service that uses Firebase directly
 export const apiService = {
